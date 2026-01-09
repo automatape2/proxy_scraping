@@ -1,0 +1,7 @@
+# Ejemplo de archivo de proxies
+# Formato: host:port o host:port:username:password
+
+192.168.1.1:8080
+192.168.1.2:8080:user1:pass1
+192.168.1.3:3128
+proxy.example.com:8080:myuser:mypass

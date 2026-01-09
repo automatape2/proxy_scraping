@@ -1,0 +1,6 @@
+# Ejemplo de archivo de URLs para scraping
+# Un URL por línea
+
+https://example.com/page1
+https://example.com/page2
+https://example.com/page3
