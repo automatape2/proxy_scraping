@@ -255,54 +255,6 @@
                                                     </p>
                                                 @endif
                                             </div>
-                                            
-                                            {{-- Carousel de imágenes --}}
-                                            @if(isset($record->data['images']) && count($record->data['images']) > 0)
-                                                <div class="border-t border-gray-200 dark:border-gray-700">
-                                                    <div class="p-3 bg-white dark:bg-gray-800">
-                                                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-2 flex items-center justify-between">
-                                                            <span>🖼️ Imágenes ({{ count($record->data['images']) }})</span>
-                                                        </div>
-                                                        <div class="relative overflow-hidden rounded-lg bg-gray-100 dark:bg-gray-900" x-data="{ current: 0, total: {{ count($record->data['images']) }} }">
-                                                            <div class="flex transition-transform duration-300" :style="`transform: translateX(-${current * 100}%)`">
-                                                                @foreach($record->data['images'] as $img)
-                                                                    <div class="w-full flex-shrink-0">
-                                                                        <img src="{{ $img }}" 
-                                                                             alt="Image" 
-                                                                             class="w-full h-32 object-contain"
-                                                                             onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22%3E✕%3C/text%3E%3C/svg%3E'">
-                                                                    </div>
-                                                                @endforeach
-                                                            </div>
-                                                            
-                                                            {{-- Controles --}}
-                                                            @if(count($record->data['images']) > 1)
-                                                                <button @click="current = current > 0 ? current - 1 : total - 1" 
-                                                                        class="absolute left-1 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 rounded-full p-1 hover:bg-white dark:hover:bg-gray-700">
-                                                                    <svg class="w-4 h-4 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-                                                                    </svg>
-                                                                </button>
-                                                                <button @click="current = current < total - 1 ? current + 1 : 0" 
-                                                                        class="absolute right-1 top-1/2 -translate-y-1/2 bg-white/80 dark:bg-gray-800/80 rounded-full p-1 hover:bg-white dark:hover:bg-gray-700">
-                                                                    <svg class="w-4 h-4 text-gray-800 dark:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-                                                                    </svg>
-                                                                </button>
-                                                                
-                                                                {{-- Indicadores --}}
-                                                                <div class="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
-                                                                    @foreach($record->data['images'] as $index => $img)
-                                                                        <button @click="current = {{ $index }}" 
-                                                                                :class="current === {{ $index }} ? 'bg-white' : 'bg-white/50'" 
-                                                                                class="w-2 h-2 rounded-full transition"></button>
-                                                                    @endforeach
-                                                                </div>
-                                                            @endif
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            @endif
                                         </div>
                                     </td>
                                     
