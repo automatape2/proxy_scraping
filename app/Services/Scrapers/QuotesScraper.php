@@ -229,6 +229,7 @@ class QuotesScraper extends BaseScraper
         return [
             'title' => trim($rawData['title'] ?? ''),
             'description' => trim($rawData['meta_description'] ?? ''),
+            'og' => $rawData['og'] ?? [],
             'headings_count' => count($rawData['headings'] ?? []),
             'headings' => array_slice($rawData['headings'] ?? [], 0, 10),
             'links_count' => count($rawData['links'] ?? []),

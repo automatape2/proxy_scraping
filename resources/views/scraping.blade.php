@@ -213,12 +213,8 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Preview</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Info</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Headings</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Links</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Imágenes</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Palabras</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Preview Card</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Stats</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Fecha</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Acciones</th>
                             </tr>
@@ -226,83 +222,109 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($this->scrapedData ?? [] as $record)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                    {{-- Preview Card --}}
+                                    {{-- Facebook-style Preview Card --}}
                                     <td class="px-6 py-4">
-                                        <div class="flex items-center space-x-3">
-                                            @php
-                                                $ogImage = isset($record->data['og']) && is_array($record->data['og']) 
-                                                    ? ($record->data['og']['image'] ?? null) 
-                                                    : null;
-                                            @endphp
+                                        @php
+                                            $og = isset($record->data['og']) && is_array($record->data['og']) 
+                                                ? $record->data['og'] 
+                                                : [];
+                                            $ogImage = $og['image'] ?? null;
+                                            $ogTitle = $og['title'] ?? $record->data['title'] ?? 'Sin título';
+                                            $ogDescription = $og['description'] ?? null;
+                                            $ogSiteName = $og['site_name'] ?? parse_url($record->source_url, PHP_URL_HOST);
+                                        @endphp
+                                        
+                                        {{-- Card estilo Facebook --}}
+                                        <div class="max-w-md border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white dark:bg-gray-800 hover:shadow-lg transition">
+                                            {{-- Imagen --}}
                                             @if($ogImage)
-                                                <img src="{{ $ogImage }}" 
-                                                     alt="Preview" 
-                                                     class="w-20 h-20 object-cover rounded-lg shadow"
-                                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22%3E?%3C/text%3E%3C/svg%3E'">
+                                                <div class="w-full h-48 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+                                                    <img src="{{ $ogImage }}" 
+                                                         alt="Preview" 
+                                                         class="w-full h-full object-cover"
+                                                         onerror="this.parentElement.innerHTML='<div class=\'w-full h-full flex items-center justify-center\'><span class=\'text-6xl\'>🌐</span></div>'">
+                                                </div>
                                             @else
-                                                <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
-                                                    <span class="text-3xl">🌐</span>
+                                                <div class="w-full h-48 bg-gradient-to-br from-blue-100 to-purple-100 dark:from-blue-900 dark:to-purple-900 flex items-center justify-center">
+                                                    <span class="text-6xl">🌐</span>
                                                 </div>
                                             @endif
+                                            
+                                            {{-- Contenido --}}
+                                            <div class="p-3 bg-gray-50 dark:bg-gray-750">
+                                                {{-- Dominio --}}
+                                                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">
+                                                    {{ $ogSiteName }}
+                                                </div>
+                                                
+                                                {{-- Título --}}
+                                                <a href="{{ $record->source_url }}" target="_blank" 
+                                                   class="block text-base font-semibold text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 mb-1 line-clamp-2">
+                                                    {{ $ogTitle }}
+                                                </a>
+                                                
+                                                {{-- Descripción --}}
+                                                @if($ogDescription)
+                                                    <p class="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                        {{ $ogDescription }}
+                                                    </p>
+                                                @endif
+                                            </div>
                                         </div>
                                     </td>
-                                    {{-- Info --}}
+                                    
+                                    {{-- Stats --}}
                                     <td class="px-6 py-4">
-                                        <div class="max-w-sm">
-                                            @php
-                                                $og = isset($record->data['og']) && is_array($record->data['og']) 
-                                                    ? $record->data['og'] 
-                                                    : [];
-                                                $title = $og['title'] ?? $record->data['title'] ?? 'Sin título';
-                                                $description = $og['description'] ?? null;
-                                            @endphp
-                                            <a href="{{ $record->source_url }}" target="_blank" class="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 block mb-1">
-                                                {{ Str::limit($title, 50) }}
-                                            </a>
-                                            @if($description)
-                                                <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                                                    {{ Str::limit($description, 100) }}
-                                                </p>
-                                            @endif
-                                            <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
-                                                {{ parse_url($record->source_url, PHP_URL_HOST) }}
-                                            </p>
+                                        <div class="space-y-2">
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">📰 Headings:</span>
+                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs font-semibold">
+                                                    {{ $record->data['headings_count'] ?? 0 }}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">🔗 Links:</span>
+                                                <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs font-semibold">
+                                                    {{ $record->data['links_count'] ?? 0 }}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">🖼️ Imágenes:</span>
+                                                <span class="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded text-xs font-semibold">
+                                                    {{ $record->data['images_count'] ?? 0 }}
+                                                </span>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="text-xs text-gray-500 dark:text-gray-400">📝 Palabras:</span>
+                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-xs font-semibold">
+                                                    {{ number_format($record->data['metadata']['word_count'] ?? 0) }}
+                                                </span>
+                                            </div>
                                         </div>
                                     </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
-                                            {{ $record->data['headings_count'] ?? 0 }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded">
-                                            {{ $record->data['links_count'] ?? 0 }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        <span class="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded">
-                                            {{ $record->data['images_count'] ?? 0 }}
-                                        </span>
-                                    </td>
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        {{ $record->data['metadata']['word_count'] ?? 0 }}
-                                    </td>
+                                    
+                                    {{-- Fecha --}}
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                                        {{ $record->scraped_at->format('Y-m-d H:i') }}
+                                        <div class="flex flex-col">
+                                            <span class="font-semibold">{{ $record->scraped_at->format('d/m/Y') }}</span>
+                                            <span class="text-xs">{{ $record->scraped_at->format('H:i') }}</span>
+                                        </div>
                                     </td>
+                                    
+                                    {{-- Acciones --}}
                                     <td class="px-6 py-4 whitespace-nowrap text-sm">
                                         <button 
                                             wire:click="deleteRecord({{ $record->id }})"
                                             wire:confirm="¿Eliminar este registro?"
-                                            class="text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300"
+                                            class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition"
                                         >
-                                            🗑️
+                                            🗑️ Eliminar
                                         </button>
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="4" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                         <div class="text-6xl mb-4">📭</div>
                                         <p class="text-lg">No hay datos scrapeados todavía</p>
                                         <p class="text-sm mt-2">Ingresa una URL arriba para comenzar</p>
