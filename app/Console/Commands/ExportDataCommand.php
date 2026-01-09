@@ -13,7 +13,7 @@ class ExportDataCommand extends Command
     protected $signature = 'scrape:export
                             {--from= : Start date (Y-m-d)}
                             {--to= : End date (Y-m-d)}
-                            {--status=processed : Data status (pending, processed, exported, error)}
+                            {--status=all : Data status (pending, processed, exported, error, all)}
                             {--limit= : Limit number of records}
                             {--async : Run asynchronously using queue}';
 
@@ -38,7 +38,8 @@ class ExportDataCommand extends Command
             $filters['to_date'] = $to;
         }
         
-        if ($status = $this->option('status')) {
+        $status = $this->option('status');
+        if ($status && $status !== 'all') {
             $filters['status'] = $status;
         }
 

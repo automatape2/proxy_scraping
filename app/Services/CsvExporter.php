@@ -60,11 +60,13 @@ class CsvExporter
             'URL',
             'Título',
             'Descripción',
-            'Precio',
-            'Categoría',
-            'Autor',
-            'Fecha',
-            'Imágenes',
+            'Total Headings',
+            'Total Links',
+            'Total Imágenes',
+            'Palabras',
+            'Headings (Top 3)',
+            'Links (Top 5)',
+            'Imágenes (URLs)',
             'Fecha de Extracción',
         ];
 
@@ -85,7 +87,12 @@ class CsvExporter
      */
     protected function writeScrapedData($file, array $filters, ?int $limit): int
     {
-        $query = ScrapedData::processed();
+        // Start with all records or filter by status
+        if (!empty($filters['status'])) {
+            $query = ScrapedData::where('status', $filters['status']);
+        } else {
+            $query = ScrapedData::query();
+        }
 
         // Apply filters
         if (!empty($filters['from_date'])) {
@@ -94,10 +101,6 @@ class CsvExporter
 
         if (!empty($filters['to_date'])) {
             $query->where('scraped_at', '<=', $filters['to_date']);
-        }
-
-        if (!empty($filters['status'])) {
-            $query->where('status', $filters['status']);
         }
 
         // Apply limit
@@ -129,15 +132,33 @@ class CsvExporter
     {
         $data = $record->data;
 
+        // Extract top headings text
+        $topHeadings = [];
+        if (!empty($data['headings'])) {
+            foreach (array_slice($data['headings'], 0, 3) as $heading) {
+                $topHeadings[] = $heading['text'] ?? '';
+            }
+        }
+
+        // Extract top links
+        $topLinks = [];
+        if (!empty($data['links'])) {
+            foreach (array_slice($data['links'], 0, 5) as $link) {
+                $topLinks[] = ($link['text'] ?? '') . ' (' . ($link['url'] ?? '') . ')';
+            }
+        }
+
         return [
             $record->id,
             $record->source_url,
             $data['title'] ?? '',
             $data['description'] ?? '',
-            $this->formatPrice($data['price'] ?? null),
-            $data['category'] ?? '',
-            $data['author'] ?? '',
-            $data['date'] ?? '',
+            $data['headings_count'] ?? 0,
+            $data['links_count'] ?? 0,
+            $data['images_count'] ?? 0,
+            $data['metadata']['word_count'] ?? 0,
+            $this->formatArray($topHeadings),
+            $this->formatArray($topLinks),
             $this->formatArray($data['images'] ?? []),
             $record->scraped_at->format('Y-m-d H:i:s'),
         ];
