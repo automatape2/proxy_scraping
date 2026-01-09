@@ -59,6 +59,12 @@ class QuotesScraper extends BaseScraper
                 'url' => $url,
                 'scraped_at' => now()->toIso8601String(),
                 'word_count' => $this->countWords($crawler),
+                'proxy_used' => $this->currentProxy ? [
+                    'host' => $this->currentProxy->host,
+                    'port' => $this->currentProxy->port,
+                    'type' => $this->currentProxy->type,
+                    'location' => $this->currentProxy->location,
+                ] : null,
             ],
         ];
 

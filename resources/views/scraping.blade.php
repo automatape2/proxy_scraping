@@ -240,9 +240,26 @@
                                             
                                             {{-- Contenido --}}
                                             <div class="p-3 bg-gray-50 dark:bg-gray-750">
-                                                {{-- Dominio --}}
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 uppercase mb-1">
-                                                    {{ $ogSiteName }}
+                                                {{-- Dominio y Proxy --}}
+                                                <div class="flex items-center justify-between mb-1">
+                                                    <div class="text-xs text-gray-500 dark:text-gray-400 uppercase">
+                                                        {{ $ogSiteName }}
+                                                    </div>
+                                                    @if(isset($record->data['metadata']['proxy_used']))
+                                                        @php $proxy = $record->data['metadata']['proxy_used']; @endphp
+                                                        <div class="flex items-center gap-1 text-xs">
+                                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                                                                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd"/>
+                                                                </svg>
+                                                                Proxy {{ $proxy['type'] ?? 'HTTP' }}
+                                                            </span>
+                                                        </div>
+                                                    @else
+                                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300">
+                                                            🌐 Directo
+                                                        </span>
+                                                    @endif
                                                 </div>
                                                 
                                                 {{-- Título --}}
@@ -336,6 +353,18 @@
                                                     {{ number_format($record->data['metadata']['word_count'] ?? 0) }}
                                                 </span>
                                             </div>
+                                            @if(isset($record->data['metadata']['proxy_used']))
+                                                @php $proxy = $record->data['metadata']['proxy_used']; @endphp
+                                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                                                    <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">⚡ Proxy Info:</div>
+                                                    <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                                        <div>🌐 {{ $proxy['host'] }}:{{ $proxy['port'] }}</div>
+                                                        @if(isset($proxy['location']))
+                                                            <div>📍 {{ $proxy['location'] }}</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            @endif
                                         </div>
                                     </td>
                                     
