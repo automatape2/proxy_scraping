@@ -43,7 +43,7 @@ return [
         /*
         | Minimum success rate for active proxies (percentage)
         */
-        'min_success_rate' => env('PROXY_MIN_SUCCESS_RATE', 70),
+        'min_success_rate' => env('PROXY_MIN_SUCCESS_RATE', 0),
 
         /*
         | Maximum consecutive failures before banning
