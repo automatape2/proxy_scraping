@@ -5,22 +5,14 @@
     
     state(['url' => '', 'message' => '', 'messageType' => 'info']);
     
-    $scrapedData = computed(fn() => \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get());
+    $scrapedData = fn() => \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get();
     
-    $stats = computed(fn() => [
+    $stats = fn() => [
         'total' => \App\Models\ScrapedData::count(),
         'today' => \App\Models\ScrapedData::whereDate('scraped_at', today())->count(),
         'processed' => \App\Models\ScrapedData::where('status', 'processed')->count(),
         'exported' => \App\Models\ScrapedData::where('status', 'exported')->count(),
-    ]);
-    
-    $loadData = function() {
-        unset($this->scrapedData);
-    };
-    
-    $loadStats = function() {
-        unset($this->stats);
-    };
+    ];
     
     $scrape = function() {
         $this->validate(['url' => 'required|string']);
@@ -41,8 +33,7 @@
                 $this->message = '✅ Datos scrapeados exitosamente';
                 $this->messageType = 'success';
                 $this->url = '';
-                $this->loadData();
-                $this->loadStats();
+                $this->js('setTimeout(() => window.location.reload(), 1000)');
             } else {
                 // Get last scraping log to show detailed error
                 $lastLog = \App\Models\ScrapingLog::where('url', $url)
@@ -79,18 +70,16 @@
     
     $deleteRecord = function(int $id) {
         \App\Models\ScrapedData::find($id)?->delete();
-        $this->loadData();
-        $this->loadStats();
         $this->message = '✅ Registro eliminado';
         $this->messageType = 'success';
+        $this->js('setTimeout(() => window.location.reload(), 500)');
     };
     
     $clearAll = function() {
         \App\Models\ScrapedData::truncate();
-        $this->loadData();
-        $this->loadStats();
         $this->message = '✅ Todos los registros eliminados';
         $this->messageType = 'success';
+        $this->js('setTimeout(() => window.location.reload(), 500)');
     };
     
     $exportCsv = function() {
@@ -101,7 +90,6 @@
             $this->messageType = 'success';
             
             \App\Models\ScrapedData::where('status', 'processed')->update(['status' => 'exported']);
-            $this->loadStats();
         } catch (\Exception $e) {
             $this->message = '❌ Error al exportar: ' . $e->getMessage();
             $this->messageType = 'error';
@@ -126,19 +114,19 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Total</div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $this->stats['total'] ?? 0 }}</div>
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $this->stats()['total'] }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Hoy</div>
-                    <div class="text-3xl font-bold text-blue-600">{{ $this->stats['today'] ?? 0 }}</div>
+                    <div class="text-3xl font-bold text-blue-600">{{ $this->stats()['today'] }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Procesados</div>
-                    <div class="text-3xl font-bold text-green-600">{{ $this->stats['processed'] ?? 0 }}</div>
+                    <div class="text-3xl font-bold text-green-600">{{ $this->stats()['processed'] }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Exportados</div>
-                    <div class="text-3xl font-bold text-purple-600">{{ $this->stats['exported'] ?? 0 }}</div>
+                    <div class="text-3xl font-bold text-purple-600">{{ $this->stats()['exported'] }}</div>
                 </div>
             </div>
 
@@ -182,11 +170,11 @@
             {{-- Actions --}}
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                    Datos Scrapeados ({{ $this->scrapedData ? count($this->scrapedData) : 0 }} últimos)
+                    Datos Scrapeados ({{ count($this->scrapedData()) }} últimos)
                 </h2>
                 <div class="flex gap-2">
                     <button 
-                        wire:click="loadData"
+                        wire:click="$refresh"
                         class="px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition"
                     >
                         🔄 Actualizar
@@ -220,7 +208,7 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @forelse($this->scrapedData ?? [] as $record)
+                            @forelse($this->scrapedData() as $record)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                     {{-- Facebook-style Preview Card --}}
                                     <td class="px-6 py-4">
