@@ -113,17 +113,13 @@ class ScrapeCommand extends Command
      */
     protected function runAsync(array $urls, string $scraperClass): int
     {
-        $batchSize = (int) $this->option('batch-size');
-        $batches = array_chunk($urls, $batchSize);
+        $this->info('Dispatching ' . count($urls) . ' jobs to queue...');
 
-        $this->info('Dispatching ' . count($batches) . ' batches to queue...');
-
-        foreach ($batches as $index => $batchUrls) {
-            $batchName = 'Scraping Batch #' . ($index + 1);
-            BatchScrapeJob::dispatch($batchUrls, $scraperClass, $batchName);
+        foreach ($urls as $url) {
+            ScrapeUrlJob::dispatch($url, $scraperClass);
         }
 
-        $this->info('Jobs dispatched successfully. Monitor with: php artisan queue:monitor');
+        $this->info('Jobs dispatched successfully. Monitor with: php artisan queue:work --queue=scraping');
 
         return 0;
     }
