@@ -79,7 +79,14 @@ class QuotesScraper extends BaseScraper
         // Convert relative URL to absolute if needed
         if ($image && !str_starts_with($image, 'http')) {
             $parsedUrl = parse_url($url);
-            $base = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+            $host = $parsedUrl['host'];
+            
+            // Add www if not present and not a subdomain
+            if (!str_starts_with($host, 'www.') && substr_count($host, '.') === 1) {
+                $host = 'www.' . $host;
+            }
+            
+            $base = $parsedUrl['scheme'] . '://' . $host;
             $image = str_starts_with($image, '/') ? $base . $image : $base . '/' . $image;
         }
         
