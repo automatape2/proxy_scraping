@@ -27,13 +27,19 @@
     };
     
     $scrape = function() {
-        $this->validate(['url' => 'required|url']);
+        $this->validate(['url' => 'required|string']);
         $this->message = '';
         
         try {
+            // Add https:// if no protocol specified
+            $url = $this->url;
+            if (!preg_match('/^https?:\/\//', $url)) {
+                $url = 'https://' . $url;
+            }
+            
             $proxyManager = app(\App\Services\ProxyManager::class);
             $scraper = new \App\Services\Scrapers\QuotesScraper($proxyManager);
-            $data = $scraper->scrape($this->url);
+            $data = $scraper->scrape($url);
             
             if ($data) {
                 $this->message = '✅ Datos scrapeados exitosamente';
@@ -126,9 +132,9 @@
                     <div class="flex gap-4">
                         <div class="flex-1">
                             <input 
-                                type="url" 
+                                type="text" 
                                 wire:model="url"
-                                placeholder="https://example.com"
+                                placeholder="example.com o https://example.com"
                                 class="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                             >
                             @error('url') 
