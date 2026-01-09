@@ -110,26 +110,6 @@
                 </p>
             </div>
 
-            {{-- Stats Cards --}}
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Total</div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $this->stats()['total'] }}</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Hoy</div>
-                    <div class="text-3xl font-bold text-blue-600">{{ $this->stats()['today'] }}</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Procesados</div>
-                    <div class="text-3xl font-bold text-green-600">{{ $this->stats()['processed'] }}</div>
-                </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">Exportados</div>
-                    <div class="text-3xl font-bold text-purple-600">{{ $this->stats()['exported'] }}</div>
-                </div>
-            </div>
-
             {{-- Scraping Form --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 mb-8">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white mb-4">
