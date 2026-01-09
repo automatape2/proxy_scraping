@@ -3,7 +3,7 @@
     <?php
     use function Livewire\Volt\{state, computed};
     
-    state(['url' => '', 'message' => '', 'messageType' => 'info', 'scrapedData', 'stats']);
+    state(['url' => '', 'message' => '', 'messageType' => 'info']);
     
     $scrapedData = computed(fn() => \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get());
     
