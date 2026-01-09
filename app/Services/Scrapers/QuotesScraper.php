@@ -51,6 +51,7 @@ class QuotesScraper extends BaseScraper
         $data = [
             'title' => $this->extractTextHelper($crawler, 'title'),
             'meta_description' => $this->extractAttributeHelper($crawler, 'meta[name="description"]', 'content'),
+            'og' => $this->extractOpenGraph($crawler, $url),
             'headings' => $this->extractHeadings($crawler),
             'links' => $this->extractLinks($crawler),
             'images' => $this->extractImagesHelper($crawler, 'img'),
@@ -62,6 +63,48 @@ class QuotesScraper extends BaseScraper
         ];
 
         return $data;
+    }
+
+    /**
+     * Extract Open Graph metadata for previews.
+     */
+    protected function extractOpenGraph($crawler, string $url): array
+    {
+        return [
+            'title' => $this->extractAttributeHelper($crawler, 'meta[property="og:title"]', 'content') 
+                ?? $this->extractTextHelper($crawler, 'title'),
+            'description' => $this->extractAttributeHelper($crawler, 'meta[property="og:description"]', 'content') 
+                ?? $this->extractAttributeHelper($crawler, 'meta[name="description"]', 'content'),
+            'image' => $this->extractAttributeHelper($crawler, 'meta[property="og:image"]', 'content')
+                ?? $this->extractFallbackImage($crawler, $url),
+            'url' => $this->extractAttributeHelper($crawler, 'meta[property="og:url"]', 'content') ?? $url,
+            'type' => $this->extractAttributeHelper($crawler, 'meta[property="og:type"]', 'content') ?? 'website',
+            'site_name' => $this->extractAttributeHelper($crawler, 'meta[property="og:site_name"]', 'content'),
+        ];
+    }
+
+    /**
+     * Extract fallback image if og:image is not available.
+     */
+    protected function extractFallbackImage($crawler, string $url): ?string
+    {
+        // Try to get first significant image
+        try {
+            $img = $crawler->filter('article img, main img, .content img, img')->first();
+            if ($img->count() > 0) {
+                $src = $img->attr('src');
+                // Convert relative URLs to absolute
+                if ($src && !str_starts_with($src, 'http')) {
+                    $parsedUrl = parse_url($url);
+                    $base = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+                    $src = str_starts_with($src, '/') ? $base . $src : $base . '/' . $src;
+                }
+                return $src;
+            }
+        } catch (\Exception $e) {
+            // No image found
+        }
+        return null;
     }
 
     /**

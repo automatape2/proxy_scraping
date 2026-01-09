@@ -187,9 +187,8 @@
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">ID</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">URL</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Título</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Preview</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Info</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Headings</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Links</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Imágenes</th>
@@ -201,16 +200,36 @@
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                             @forelse($scrapedData as $record)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
-                                        {{ $record->id }}
+                                    {{-- Preview Card --}}
+                                    <td class="px-6 py-4">
+                                        <div class="flex items-center space-x-3">
+                                            @if(isset($record->data['og']['image']) && $record->data['og']['image'])
+                                                <img src="{{ $record->data['og']['image'] }}" 
+                                                     alt="Preview" 
+                                                     class="w-20 h-20 object-cover rounded-lg shadow"
+                                                     onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22%3E?%3C/text%3E%3C/svg%3E'">
+                                            @else
+                                                <div class="w-20 h-20 bg-gray-200 dark:bg-gray-700 rounded-lg flex items-center justify-center">
+                                                    <span class="text-3xl">🌐</span>
+                                                </div>
+                                            @endif
+                                        </div>
                                     </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                        <a href="{{ $record->source_url }}" target="_blank" class="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 truncate block max-w-xs" title="{{ $record->source_url }}">
-                                            {{ Str::limit($record->source_url, 40) }}
-                                        </a>
-                                    </td>
-                                    <td class="px-6 py-4 text-sm text-gray-900 dark:text-white">
-                                        {{ Str::limit($record->data['title'] ?? 'N/A', 30) }}
+                                    {{-- Info --}}
+                                    <td class="px-6 py-4">
+                                        <div class="max-w-sm">
+                                            <a href="{{ $record->source_url }}" target="_blank" class="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 block mb-1">
+                                                {{ Str::limit($record->data['og']['title'] ?? $record->data['title'] ?? 'Sin título', 50) }}
+                                            </a>
+                                            @if(isset($record->data['og']['description']))
+                                                <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
+                                                    {{ Str::limit($record->data['og']['description'], 100) }}
+                                                </p>
+                                            @endif
+                                            <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
+                                                {{ parse_url($record->source_url, PHP_URL_HOST) }}
+                                            </p>
+                                        </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
                                         <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded">
@@ -245,7 +264,7 @@
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="9" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
+                                    <td colspan="8" class="px-6 py-12 text-center text-gray-500 dark:text-gray-400">
                                         <div class="text-6xl mb-4">📭</div>
                                         <p class="text-lg">No hay datos scrapeados todavía</p>
                                         <p class="text-sm mt-2">Ingresa una URL arriba para comenzar</p>
