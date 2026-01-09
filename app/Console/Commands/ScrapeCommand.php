@@ -15,7 +15,7 @@ class ScrapeCommand extends Command
     protected $signature = 'scrape:run
                             {--url= : Single URL to scrape}
                             {--file= : File containing URLs (one per line)}
-                            {--scraper=App\Services\Scrapers\ExampleScraper : Scraper class to use}
+                            {--scraper=App\Services\Scrapers\QuotesScraper : Scraper class to use}
                             {--async : Run asynchronously using queues}
                             {--batch-size=100 : Number of URLs per batch}';
 
@@ -83,6 +83,7 @@ class ScrapeCommand extends Command
         
         $success = 0;
         $failed = 0;
+        $errors = [];
 
         foreach ($urls as $url) {
             try {
@@ -92,9 +93,11 @@ class ScrapeCommand extends Command
                     $success++;
                 } else {
                     $failed++;
+                    $errors[] = "No data extracted from {$url}";
                 }
             } catch (\Exception $e) {
                 $this->error("\nError scraping {$url}: {$e->getMessage()}");
+                $errors[] = "{$url}: {$e->getMessage()}";
                 $failed++;
             }
             
@@ -104,6 +107,17 @@ class ScrapeCommand extends Command
         $bar->finish();
         $this->newLine();
         $this->info("Completed: {$success} successful, {$failed} failed");
+
+        // Show errors if verbose
+        if ($failed > 0 && !empty($errors)) {
+            $this->newLine();
+            $this->warn("Failed URLs:");
+            foreach ($errors as $error) {
+                $this->line("  • {$error}");
+            }
+            $this->newLine();
+            $this->comment("Tip: Check storage/logs/laravel.log for more details");
+        }
 
         return 0;
     }
