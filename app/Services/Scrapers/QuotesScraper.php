@@ -70,13 +70,25 @@ class QuotesScraper extends BaseScraper
      */
     protected function extractOpenGraph($crawler, string $url): array
     {
+        // Extract image from multiple sources
+        $image = $this->extractAttributeHelper($crawler, 'meta[property="og:image"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[itemprop="image"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[name="twitter:image"]', 'content')
+            ?? $this->extractFallbackImage($crawler, $url);
+        
+        // Convert relative URL to absolute if needed
+        if ($image && !str_starts_with($image, 'http')) {
+            $parsedUrl = parse_url($url);
+            $base = $parsedUrl['scheme'] . '://' . $parsedUrl['host'];
+            $image = str_starts_with($image, '/') ? $base . $image : $base . '/' . $image;
+        }
+        
         return [
             'title' => $this->extractAttributeHelper($crawler, 'meta[property="og:title"]', 'content') 
                 ?? $this->extractTextHelper($crawler, 'title'),
             'description' => $this->extractAttributeHelper($crawler, 'meta[property="og:description"]', 'content') 
                 ?? $this->extractAttributeHelper($crawler, 'meta[name="description"]', 'content'),
-            'image' => $this->extractAttributeHelper($crawler, 'meta[property="og:image"]', 'content')
-                ?? $this->extractFallbackImage($crawler, $url),
+            'image' => $image,
             'url' => $this->extractAttributeHelper($crawler, 'meta[property="og:url"]', 'content') ?? $url,
             'type' => $this->extractAttributeHelper($crawler, 'meta[property="og:type"]', 'content') ?? 'website',
             'site_name' => $this->extractAttributeHelper($crawler, 'meta[property="og:site_name"]', 'content'),
