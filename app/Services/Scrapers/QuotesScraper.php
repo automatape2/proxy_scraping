@@ -265,11 +265,6 @@ class QuotesScraper extends BaseScraper
             'title' => trim($rawData['title'] ?? ''),
             'description' => trim($rawData['meta_description'] ?? ''),
             'og' => $rawData['og'] ?? [],
-            'headings_count' => count($rawData['headings'] ?? []),
-            'headings' => array_slice($rawData['headings'] ?? [], 0, 10),
-            'links_count' => count($rawData['links'] ?? []),
-            'links' => array_slice($rawData['links'] ?? [], 0, 10),
-            'images_count' => count($rawData['images'] ?? []),
             'images' => array_slice($rawData['images'] ?? [], 0, 5),
             'metadata' => $rawData['metadata'] ?? [],
         ];

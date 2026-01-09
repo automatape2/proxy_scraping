@@ -308,44 +308,20 @@
                                     
                                     {{-- Stats --}}
                                     <td class="px-6 py-4">
-                                        <div class="space-y-2">
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">📰 Headings:</span>
-                                                <span class="px-2 py-1 bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 rounded text-xs font-semibold">
-                                                    {{ $record->data['headings_count'] ?? 0 }}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">🔗 Links:</span>
-                                                <span class="px-2 py-1 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 rounded text-xs font-semibold">
-                                                    {{ $record->data['links_count'] ?? 0 }}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">🖼️ Imágenes:</span>
-                                                <span class="px-2 py-1 bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 rounded text-xs font-semibold">
-                                                    {{ $record->data['images_count'] ?? 0 }}
-                                                </span>
-                                            </div>
-                                            <div class="flex items-center gap-2">
-                                                <span class="text-xs text-gray-500 dark:text-gray-400">📝 Palabras:</span>
-                                                <span class="px-2 py-1 bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200 rounded text-xs font-semibold">
-                                                    {{ number_format($record->data['metadata']['word_count'] ?? 0) }}
-                                                </span>
-                                            </div>
-                                            @if(isset($record->data['metadata']['proxy_used']))
-                                                @php $proxy = $record->data['metadata']['proxy_used']; @endphp
-                                                <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                                                    <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">⚡ Proxy Info:</div>
-                                                    <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
-                                                        <div>🌐 {{ $proxy['host'] }}:{{ $proxy['port'] }}</div>
-                                                        @if(isset($proxy['location']))
-                                                            <div>📍 {{ $proxy['location'] }}</div>
-                                                        @endif
-                                                    </div>
+                                        @if(isset($record->data['metadata']['proxy_used']))
+                                            @php $proxy = $record->data['metadata']['proxy_used']; @endphp
+                                            <div class="space-y-1">
+                                                <div class="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2">⚡ Proxy Info:</div>
+                                                <div class="space-y-1 text-xs text-gray-600 dark:text-gray-400">
+                                                    <div>🌐 {{ $proxy['host'] }}:{{ $proxy['port'] }}</div>
+                                                    @if(isset($proxy['location']))
+                                                        <div>📍 {{ $proxy['location'] }}</div>
+                                                    @endif
                                                 </div>
-                                            @endif
-                                        </div>
+                                            </div>
+                                        @else
+                                            <span class="text-xs text-gray-500 dark:text-gray-400">Sin proxy</span>
+                                        @endif
                                     </td>
                                     
                                     {{-- Fecha --}}
