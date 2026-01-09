@@ -66,6 +66,7 @@ abstract class BaseScraper
     protected function fetch(string $url, array $options = []): ?string
     {
         $attempt = 0;
+        $triedWithoutProxy = false;
 
         while ($attempt < $this->maxRetries) {
             $attempt++;
@@ -73,10 +74,14 @@ abstract class BaseScraper
 
             try {
                 // Get a proxy if enabled
-                if ($this->useProxy) {
+                if ($this->useProxy && !$triedWithoutProxy) {
                     $this->currentProxy = $this->proxyManager->getNextProxy();
                     
-                    if (!$this->currentProxy) {
+                    // If no proxy available on last attempt, try without proxy
+                    if (!$this->currentProxy && $attempt == $this->maxRetries) {
+                        $triedWithoutProxy = true;
+                        Log::info("No proxies available, trying without proxy for {$url}");
+                    } elseif (!$this->currentProxy) {
                         throw new \Exception('No available proxies');
                     }
                 }
