@@ -90,11 +90,21 @@ class QuotesScraper extends BaseScraper
             $image = str_starts_with($image, '/') ? $base . $image : $base . '/' . $image;
         }
         
+        // Extract description from multiple sources
+        $description = $this->extractAttributeHelper($crawler, 'meta[property="og:description"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[name="description"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[itemprop="description"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[name="twitter:description"]', 'content');
+        
+        // Extract title from multiple sources
+        $title = $this->extractAttributeHelper($crawler, 'meta[property="og:title"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[itemprop="name"]', 'content')
+            ?? $this->extractAttributeHelper($crawler, 'meta[name="twitter:title"]', 'content')
+            ?? $this->extractTextHelper($crawler, 'title');
+        
         return [
-            'title' => $this->extractAttributeHelper($crawler, 'meta[property="og:title"]', 'content') 
-                ?? $this->extractTextHelper($crawler, 'title'),
-            'description' => $this->extractAttributeHelper($crawler, 'meta[property="og:description"]', 'content') 
-                ?? $this->extractAttributeHelper($crawler, 'meta[name="description"]', 'content'),
+            'title' => $title,
+            'description' => $description,
             'image' => $image,
             'url' => $this->extractAttributeHelper($crawler, 'meta[property="og:url"]', 'content') ?? $url,
             'type' => $this->extractAttributeHelper($crawler, 'meta[property="og:type"]', 'content') ?? 'website',
