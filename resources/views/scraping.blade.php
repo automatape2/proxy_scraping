@@ -1,29 +1,25 @@
 <x-layouts.scraping>
     @volt('scraping-dashboard')
     <?php
-    use function Livewire\Volt\{state};
+    use function Livewire\Volt\{state, computed};
     
-    state(['url' => '', 'message' => '', 'messageType' => 'info']);
+    state(['url' => '', 'message' => '', 'messageType' => 'info', 'scrapedData', 'stats']);
     
-    $scrapedData = \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get();
-    $stats = [
+    $scrapedData = computed(fn() => \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get());
+    
+    $stats = computed(fn() => [
         'total' => \App\Models\ScrapedData::count(),
         'today' => \App\Models\ScrapedData::whereDate('scraped_at', today())->count(),
         'processed' => \App\Models\ScrapedData::where('status', 'processed')->count(),
         'exported' => \App\Models\ScrapedData::where('status', 'exported')->count(),
-    ];
+    ]);
     
     $loadData = function() {
-        $this->scrapedData = \App\Models\ScrapedData::orderBy('scraped_at', 'desc')->limit(50)->get();
+        unset($this->scrapedData);
     };
     
     $loadStats = function() {
-        $this->stats = [
-            'total' => \App\Models\ScrapedData::count(),
-            'today' => \App\Models\ScrapedData::whereDate('scraped_at', today())->count(),
-            'processed' => \App\Models\ScrapedData::where('status', 'processed')->count(),
-            'exported' => \App\Models\ScrapedData::where('status', 'exported')->count(),
-        ];
+        unset($this->stats);
     };
     
     $scrape = function() {
@@ -48,10 +44,34 @@
                 $this->loadData();
                 $this->loadStats();
             } else {
-                $this->message = '❌ No se pudo scrapear la URL';
+                // Get last scraping log to show detailed error
+                $lastLog = \App\Models\ScrapingLog::where('url', $url)
+                    ->latest()
+                    ->first();
+                
+                $errorDetail = 'No se pudo scrapear la URL después de múltiples intentos';
+                if ($lastLog && $lastLog->error_message) {
+                    $errorDetail .= ': ' . $lastLog->error_message;
+                }
+                if ($lastLog && $lastLog->response_code) {
+                    $errorDetail .= ' (HTTP ' . $lastLog->response_code . ')';
+                }
+                
+                \Log::error("Scraping failed for {$url}", [
+                    'url' => $url,
+                    'log' => $lastLog?->toArray()
+                ]);
+                
+                $this->message = '❌ ' . $errorDetail;
                 $this->messageType = 'error';
             }
         } catch (\Exception $e) {
+            \Log::error("Error scrapeando {$url}: {$e->getMessage()}", [
+                'exception' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
             $this->message = '❌ Error: ' . $e->getMessage();
             $this->messageType = 'error';
         }
@@ -106,19 +126,19 @@
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Total</div>
-                    <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $stats['total'] }}</div>
+                    <div class="text-3xl font-bold text-gray-900 dark:text-white">{{ $this->stats['total'] ?? 0 }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Hoy</div>
-                    <div class="text-3xl font-bold text-blue-600">{{ $stats['today'] }}</div>
+                    <div class="text-3xl font-bold text-blue-600">{{ $this->stats['today'] ?? 0 }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Procesados</div>
-                    <div class="text-3xl font-bold text-green-600">{{ $stats['processed'] }}</div>
+                    <div class="text-3xl font-bold text-green-600">{{ $this->stats['processed'] ?? 0 }}</div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                     <div class="text-sm text-gray-600 dark:text-gray-400">Exportados</div>
-                    <div class="text-3xl font-bold text-purple-600">{{ $stats['exported'] }}</div>
+                    <div class="text-3xl font-bold text-purple-600">{{ $this->stats['exported'] ?? 0 }}</div>
                 </div>
             </div>
 
@@ -162,7 +182,7 @@
             {{-- Actions --}}
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-xl font-semibold text-gray-900 dark:text-white">
-                    Datos Scrapeados ({{ count($scrapedData) }} últimos)
+                    Datos Scrapeados ({{ $this->scrapedData ? count($this->scrapedData) : 0 }} últimos)
                 </h2>
                 <div class="flex gap-2">
                     <button 
@@ -204,13 +224,18 @@
                             </tr>
                         </thead>
                         <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-                            @forelse($scrapedData as $record)
+                            @forelse($this->scrapedData ?? [] as $record)
                                 <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition">
                                     {{-- Preview Card --}}
                                     <td class="px-6 py-4">
                                         <div class="flex items-center space-x-3">
-                                            @if(isset($record->data['og']['image']) && $record->data['og']['image'])
-                                                <img src="{{ $record->data['og']['image'] }}" 
+                                            @php
+                                                $ogImage = isset($record->data['og']) && is_array($record->data['og']) 
+                                                    ? ($record->data['og']['image'] ?? null) 
+                                                    : null;
+                                            @endphp
+                                            @if($ogImage)
+                                                <img src="{{ $ogImage }}" 
                                                      alt="Preview" 
                                                      class="w-20 h-20 object-cover rounded-lg shadow"
                                                      onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22100%22 height=%22100%22%3E%3Crect fill=%22%23ddd%22 width=%22100%22 height=%22100%22/%3E%3Ctext fill=%22%23999%22 x=%2250%%22 y=%2250%%22 text-anchor=%22middle%22 dy=%22.3em%22%3E?%3C/text%3E%3C/svg%3E'">
@@ -224,12 +249,19 @@
                                     {{-- Info --}}
                                     <td class="px-6 py-4">
                                         <div class="max-w-sm">
+                                            @php
+                                                $og = isset($record->data['og']) && is_array($record->data['og']) 
+                                                    ? $record->data['og'] 
+                                                    : [];
+                                                $title = $og['title'] ?? $record->data['title'] ?? 'Sin título';
+                                                $description = $og['description'] ?? null;
+                                            @endphp
                                             <a href="{{ $record->source_url }}" target="_blank" class="text-sm font-semibold text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 block mb-1">
-                                                {{ Str::limit($record->data['og']['title'] ?? $record->data['title'] ?? 'Sin título', 50) }}
+                                                {{ Str::limit($title, 50) }}
                                             </a>
-                                            @if(isset($record->data['og']['description']))
+                                            @if($description)
                                                 <p class="text-xs text-gray-600 dark:text-gray-400 line-clamp-2">
-                                                    {{ Str::limit($record->data['og']['description'], 100) }}
+                                                    {{ Str::limit($description, 100) }}
                                                 </p>
                                             @endif
                                             <p class="text-xs text-gray-500 dark:text-gray-500 mt-1">
