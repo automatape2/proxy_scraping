@@ -31,7 +31,8 @@
         $this->message = '';
         
         try {
-            $scraper = new \App\Services\Scrapers\QuotesScraper();
+            $proxyManager = app(\App\Services\ProxyManager::class);
+            $scraper = new \App\Services\Scrapers\QuotesScraper($proxyManager);
             $data = $scraper->scrape($this->url);
             
             if ($data) {
